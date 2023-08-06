@@ -2,14 +2,13 @@
 //  ImmersiveCalculator
 
 // TODO: Here are todos
-// 3-1. TODO: Tapping equal repeatedly, operating calculation repeatedly
-// 3-2. "12+3===..." should become "12+3=15", then "15+3=18", "18+3=21" ...
+// 3. inputNUmbers don't include operator equal returns nothing
 
 // 4. TODO: Divide and multiply should be calculated first.
 
 // 5. TODO: Not only AC but also just C is needed.
 // 6. TODO: If undefined operation(i.e. divided by 0) is attempted, "Undefined" should be displayed.
-
+// 7. TODO: Too long inputNumbers makes itself unreadable
 
 import SwiftUI
 import RealityKit
@@ -81,6 +80,21 @@ enum CalcButton: String {
 
 enum Operation {
     case addOp, subtractOp, divideOp, multiplyOp, none
+    
+    var str: String {
+        switch self {
+        case .addOp:
+            return "+"
+        case .subtractOp:
+            return "-"
+        case .divideOp:
+            return "÷"
+        case .multiplyOp:
+            return "×"
+        default:
+            return ""
+        }
+    }
 }
 
 
@@ -93,9 +107,10 @@ struct ContentView : View {
     // Variable for changing basic operator button color
     @State var activeButton: CalcButton?
     // Boolean for check if an operator is selected
-    @State var isCalculating: Bool = false
+    @State var isOperatorTapped: Bool = false
     // Boolean for that number not follow the output number
-    @State var isJustCalculated: Bool = false
+    // After equal tapped it becomes true
+    @State var isEqualTapped: Bool = false
     // Number input
     @State var inputNumbers: String = ""
     // Hold latest operand
@@ -235,20 +250,27 @@ struct ContentView : View {
                     self.inputNumbers += button.rawValue
                 }
                 
-                
                 // Change color of selected operator button
                 self.activeButton = button
                 
+                // Tapping operator after equal does not run operation
+                if isEqualTapped {
+                    self.isOperatorTapped = true
+                    self.currentOperation = button.operation
+                    self.runningNumber = Decimal(string: self.value) ?? 0
+                    self.isEqualTapped = false
+                    return
+                }
                 
                 // Run calculation with operators
-                if currentOperation != .none && !isCalculating {
+                if currentOperation != .none && !isOperatorTapped {
                     let currentValue = Decimal(string: self.value) ?? 0
                     let result = performOperation(self.currentOperation, on: self.runningNumber, and: currentValue)
                     self.value = formatNumber(result)
                 }
                 
-                
-                self.isCalculating = true
+                // Update bool
+                self.isOperatorTapped = true
                 
                 // set operation
                 self.currentOperation = button.operation
@@ -258,6 +280,7 @@ struct ContentView : View {
                 
             } else if button == .equal {
                 
+                /// inputNumbers
                 // If last character is an operator, repeat operation
                 // i.e. "12+14+=" becomes "12+14+26=52"
                 if let lastCharacter = inputNumbers.last {
@@ -266,15 +289,34 @@ struct ContentView : View {
                     }
                 }
                 
-                let currentValue = Decimal(string: self.value) ?? 0
-                let result = performOperation(self.currentOperation, on: self.runningNumber, and: currentValue)
-                self.value = formatNumber(result)
-                self.runningNumber = currentValue
-                self.isCalculating = false
-                self.isJustCalculated = true
+                // Repeat last operation with equal
+                if isEqualTapped {
+                    // Update value
+                    let currentValue = Decimal(string: self.value) ?? 0
+                    let result = performOperation(self.currentOperation, on: currentValue, and: self.latestOperand)
+                    self.value = formatNumber(result)
+                    self.runningNumber = currentValue
+                    /// inputNumbers
+                    inputNumbers = "\(currentValue)\(currentOperation.str)\(self.latestOperand)=\(value)"
+                    return
+                }
                 
-                // reset operation
-                self.currentOperation = .none
+                // Get latest operand
+                self.latestOperand = Decimal(string: self.value) ?? 0
+                
+                // Get current value
+                let currentValue = Decimal(string: self.value) ?? 0
+                // Get result of selected operation
+                let result = performOperation(self.currentOperation, on: self.runningNumber, and: currentValue)
+                // Set the result to value
+                self.value = formatNumber(result)
+                // Update runningNumber
+                self.runningNumber = currentValue
+                // Reset boolean for calculating
+                self.isOperatorTapped = false
+                
+                // Update the bool
+                self.isEqualTapped = true
                 
                 // Show equal and result
                 inputNumbers += button.rawValue + value
@@ -290,8 +332,8 @@ struct ContentView : View {
             self.activeButton = nil
             // clear operation
             self.currentOperation = .none
-            self.isCalculating = false
-            self.isJustCalculated = false
+            self.isOperatorTapped = false
+            self.isEqualTapped = false
             // reset inputNumber
             self.inputNumbers = ""
             // reset lastOperand
@@ -302,7 +344,7 @@ struct ContentView : View {
         // Actions for "." button
         case .decimal:
             if value.contains(".") { return }
-            if isCalculating || isJustCalculated { return }
+            if isOperatorTapped || isEqualTapped { return }
             value += button.rawValue
             // add . to input number in expression
             if let lastCharacter = inputNumbers.last {
@@ -334,8 +376,10 @@ struct ContentView : View {
             value = String(Double(value)! / 100)
             break
             
+            
         // Action for number button
         default:
+            
             
             // Show operation input below the displayed number
             if inputNumbers != "0" {
@@ -344,31 +388,35 @@ struct ContentView : View {
                 self.inputNumbers = button.rawValue
             }
             
-            // Hold input number
-            self.latestOperand = Decimal(string: button.rawValue) ?? 0
+            // Functionality when a number is tapped after equal
+            if isEqualTapped {
+                self.value = button.rawValue
+                self.inputNumbers = button.rawValue
+                self.isEqualTapped = false
+                self.currentOperation = .none
+                return
+            }
             
             
             // Reset color of the basic operator
-            if activeButton != nil {
-                activeButton = nil
-            }
+            if activeButton != nil { activeButton = nil }
             
             
             // Get number from input
             let number = button.rawValue
             
-            if self.isJustCalculated {
+            if self.isEqualTapped {
                 self.value = number
-                self.isJustCalculated = false
-                self.isCalculating = false
+                self.isEqualTapped = false
+                self.isOperatorTapped = false
                 return
             }
             
             // If some operating is running, displayed number changes
-            if self.isCalculating {
+            if self.isOperatorTapped {
                 value = number
-                self.isCalculating = false
-                self.isJustCalculated = false
+                self.isOperatorTapped = false
+                self.isEqualTapped = false
                 return
             }
             
