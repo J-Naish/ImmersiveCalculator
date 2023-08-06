@@ -2,7 +2,6 @@
 //  ImmersiveCalculator
 
 // TODO: Here are todos
-// 3. inputNUmbers don't include operator equal returns nothing
 
 // 4. TODO: Divide and multiply should be calculated first.
 
@@ -278,6 +277,7 @@ struct ContentView : View {
                 // value becomes runningNumber
                 self.runningNumber = Decimal(string: self.value) ?? 0
                 
+                // In case of equal
             } else if button == .equal {
                 
                 /// inputNumbers
@@ -287,6 +287,12 @@ struct ContentView : View {
                     if lastCharacter == "+" || lastCharacter == "-" || lastCharacter == "÷" || lastCharacter == "×" {
                         self.inputNumbers += self.value
                     }
+                }
+                
+                // If there is no operator input, return
+                if !inputNumbers.contains("+") && !inputNumbers.contains("-") &&
+                    !inputNumbers.contains("÷") && !inputNumbers.contains("×") {
+                    return
                 }
                 
                 // Repeat last operation with equal
