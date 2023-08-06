@@ -2,15 +2,13 @@
 //  ImmersiveCalculator
 
 // TODO: Here are todos
-// 2-1. FIXME: If I change an operator, the operation same as the last time is repeated.
-// 2-2. FIXME: If an operator tapped repeatedly, operation run
 // 3-1. TODO: Tapping equal repeatedly, operating calculation repeatedly
 // 3-2. "12+3===..." should become "12+3=15", then "15+3=18", "18+3=21" ...
 
-// 3. TODO: Divide and multiply should be calculated first.
+// 4. TODO: Divide and multiply should be calculated first.
 
-// 4. TODO: Not only AC but also just C is needed.
-// 5. TODO: If undefined operation(i.e. divided by 0) is attempted, "Undefined" should be displayed.
+// 5. TODO: Not only AC but also just C is needed.
+// 6. TODO: If undefined operation(i.e. divided by 0) is attempted, "Undefined" should be displayed.
 
 
 import SwiftUI
@@ -94,7 +92,7 @@ struct ContentView : View {
     @State var currentOperation: Operation = .none
     // Variable for changing basic operator button color
     @State var activeButton: CalcButton?
-    // Boolean for check if an operation is running in order to update display number
+    // Boolean for check if an operator is selected
     @State var isCalculating: Bool = false
     // Boolean for that number not follow the output number
     @State var isJustCalculated: Bool = false
@@ -242,15 +240,12 @@ struct ContentView : View {
                 self.activeButton = button
                 
                 
-                // FIXME: This code trigger a bug; an operator after a different operator run operation
                 // Run calculation with operators
-                // "15+6+-" should be "15+6-" and value 21
-                if currentOperation != .none {
+                if currentOperation != .none && !isCalculating {
                     let currentValue = Decimal(string: self.value) ?? 0
                     let result = performOperation(self.currentOperation, on: self.runningNumber, and: currentValue)
                     self.value = formatNumber(result)
                 }
-                
                 
                 
                 self.isCalculating = true
