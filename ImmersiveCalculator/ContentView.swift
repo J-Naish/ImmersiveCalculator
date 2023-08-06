@@ -7,7 +7,7 @@
 
 // 5. TODO: Not only AC but also just C is needed.
 // 6. TODO: If undefined operation(i.e. divided by 0) is attempted, "Undefined" should be displayed.
-// 7. TODO: Too long inputNumbers makes itself unreadable
+
 
 import SwiftUI
 import RealityKit
@@ -141,17 +141,20 @@ struct ContentView : View {
                     Spacer()
                     Text(addCommas(value))
                         .bold()
+                        .lineLimit(1)
+                        .truncationMode(.head)
                         .font(.system(size:48))
                         .foregroundColor(.white)
                         .shadow(color: Color.shadowWhite, radius: 6, x: 0, y: 0)
                 }
-                .frame(width: 240, height: 50) // This frame prevend displayed number to be in 2 rows
                 .padding()
                 
                 // Expression
                 HStack {
                     Spacer()
                     Text(insertSpaces(inputNumbers))
+                        .lineLimit(1)
+                        .truncationMode(.head)
                 }
                 .frame(width: 240, height: 20)
                 
