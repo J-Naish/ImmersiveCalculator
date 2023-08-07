@@ -99,7 +99,7 @@ enum Operation {
 
 struct ContentView : View {
     
-    @State var value = "0"
+    @State var value:String = "0"
     @State var runningNumber:Decimal = 0
     // Variable for what the running operation is
     @State var currentOperation: Operation = .none
@@ -112,7 +112,7 @@ struct ContentView : View {
     @State var isEqualTapped: Bool = false
     // Number input
     @State var inputNumbers: String = ""
-    // Hold latest operand
+    // Hold latest operand, variable for repeating operation with equal
     @State var latestOperand: Decimal = 0
 
     
@@ -245,6 +245,8 @@ struct ContentView : View {
                         self.inputNumbers = String(inputNumbers.dropLast())
                     }
                 }
+                
+                /// inputNumbers
                 // Show operation input below the displayed number
                 if self.value == "0" && self.inputNumbers == "" {
                     self.inputNumbers += self.value + button.rawValue
@@ -264,6 +266,18 @@ struct ContentView : View {
                     return
                 }
                 
+                // Run ÷ and × cualculation first before + and - calculation
+//                if (currentOperation == .addOp || currentOperation == .subtractOp) &&
+//                    (button.operation == .divideOp || button.operation == .multiplyOp)
+//                {
+//                    // It is OK
+//                    let previousOperand: Decimal? = self.runningNumber
+//                    let currentValue = self.value
+//                    self.isOperatorTapped = true
+//                    self.currentOperation = button.operation
+//                    return
+//                }
+                
                 // Run calculation with operators
                 if currentOperation != .none && !isOperatorTapped {
                     let currentValue = Decimal(string: self.value) ?? 0
@@ -273,6 +287,7 @@ struct ContentView : View {
                 
                 // Update bool
                 self.isOperatorTapped = true
+                self.isEqualTapped = false
                 
                 // set operation
                 self.currentOperation = button.operation
@@ -352,20 +367,26 @@ struct ContentView : View {
             
         // Actions for "." button
         case .decimal:
+            // Ignore process if decimal point is also included
             if value.contains(".") { return }
-            if isOperatorTapped || isEqualTapped { return }
-            value += button.rawValue
-            // add . to input number in expression
-            if let lastCharacter = inputNumbers.last {
-                if lastCharacter == "+" || lastCharacter == "-" || lastCharacter == "÷" || lastCharacter == "×" || lastCharacter == "=" {
-                    self.inputNumbers += "0" + button.rawValue
-                    return
-                }
-            } else {
-                self.inputNumbers = "0" + button.rawValue
+            //
+            if isEqualTapped { return }
+            
+            if isOperatorTapped {
+                // Decimal point tapped after operator, it begins with 0
+                value = "0" + button.rawValue
+                self.isOperatorTapped = false
+                /// inputNumbers
+                self.inputNumbers += "0" + button.rawValue
                 return
             }
+            
+            // Update value
+            value += button.rawValue
+
+            // Update inputNumbers
             self.inputNumbers += button.rawValue
+            
             break
             
             
